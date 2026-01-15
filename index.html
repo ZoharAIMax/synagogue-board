@@ -1,0 +1,228 @@
+<!DOCTYPE html>
+<html lang="he" dir="rtl">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>לוח מודעות דיגיטלי - בית כנסת</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Heebo:wght@300;400;500;700;800&family=Rubik:wght@400;500;700&display=swap" rel="stylesheet">
+    <style>
+        body {
+            font-family: 'Heebo', 'Rubik', sans-serif;
+            background-color: #0f172a; /* Slate 900 */
+            color: #f8fafc;
+            overflow: hidden;
+            height: 100vh;
+        }
+        .gold-accent { color: #d4af37; }
+        .gold-border { border-color: #d4af37; }
+        .gold-bg { background-color: #d4af37; }
+        .glass {
+            background: rgba(30, 41, 59, 0.7);
+            backdrop-filter: blur(10px);
+            border: 1px solid rgba(212, 175, 55, 0.2);
+        }
+        @keyframes fade-in {
+            from { opacity: 0; transform: translateY(10px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+        .animate-fade-in { animation: fade-in 0.6s ease-out forwards; }
+        .scroller {
+            scrollbar-width: thin;
+            scrollbar-color: #d4af37 transparent;
+        }
+        .scroller::-webkit-scrollbar { width: 6px; }
+        .scroller::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
+    </style>
+<link rel="stylesheet" href="/index.css">
+</head>
+<body class="p-4 md:p-6">
+
+    <div id="app" class="h-full flex flex-col max-w-[1920px] mx-auto opacity-0 transition-opacity duration-1000">
+        <!-- Header -->
+        <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b-2 gold-border pb-6">
+            <div class="text-right flex-1">
+                <h1 id="synagogue-name" class="text-3xl md:text-5xl font-extrabold gold-accent tracking-tight mb-1"></h1>
+                <div class="flex gap-4 text-slate-300 text-lg md:text-xl font-medium">
+                    <span id="hebrew-date-display">טוען תאריך...</span>
+                    <span class="text-slate-500">|</span>
+                    <span class="gold-accent" id="parasha-display">פרשת השבוע</span>
+                </div>
+            </div>
+            
+            <div class="flex flex-col items-center md:items-end flex-1 mt-4 md:mt-0">
+                <div id="live-clock" class="text-5xl md:text-7xl font-bold tracking-widest tabular-nums mb-1">00:00:00</div>
+                <div id="gregorian-date" class="text-xl md:text-2xl text-slate-400"></div>
+            </div>
+        </header>
+
+        <main class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 overflow-hidden">
+            <!-- Col 1: Prayer Times -->
+            <section class="glass rounded-2xl p-6 flex flex-col h-full shadow-2xl">
+                <div class="flex items-center gap-3 mb-4 border-b gold-border/30 pb-3">
+                    <span class="gold-accent text-2xl">🕒</span>
+                    <h2 class="text-2xl font-bold gold-accent">זמני תפילות</h2>
+                </div>
+                <div id="prayer-list" class="space-y-3"></div>
+            </section>
+
+            <!-- Col 2: Zmanim -->
+            <div class="flex flex-col gap-6 h-full">
+                <section class="glass rounded-2xl p-6 shadow-2xl">
+                    <div class="flex items-center gap-3 mb-4 border-b gold-border/30 pb-3">
+                        <span class="gold-accent text-2xl">☀️</span>
+                        <h2 class="text-2xl font-bold gold-accent">זמני היום</h2>
+                    </div>
+                    <div class="bg-slate-800/30 rounded-xl p-4 space-y-2">
+                        <div class="flex justify-between items-center py-2 border-b border-slate-700/50">
+                            <span class="text-xl text-slate-300">נץ החמה</span>
+                            <span id="netz-time" class="text-2xl font-bold text-white">--:--</span>
+                        </div>
+                        <div class="flex justify-between items-center py-2">
+                            <span class="text-xl text-slate-300">שקיעה</span>
+                            <span id="shkia-time" class="text-2xl font-bold text-white">--:--</span>
+                        </div>
+                    </div>
+                </section>
+
+                <section class="glass rounded-2xl p-6 shadow-2xl flex-1">
+                    <div class="flex items-center gap-3 mb-4 border-b gold-border/30 pb-3">
+                        <span class="gold-accent text-2xl">🕯️</span>
+                        <h2 class="text-2xl font-bold gold-accent">זמני שבת קודש</h2>
+                    </div>
+                    <div class="grid grid-cols-2 gap-4 mb-4">
+                        <div class="flex flex-col items-center justify-center p-4 bg-amber-900/20 border border-amber-600/30 rounded-2xl">
+                            <span class="text-lg text-amber-200">הדלקת נרות</span>
+                            <span id="candles-time" class="text-3xl font-black text-white">--:--</span>
+                        </div>
+                        <div class="flex flex-col items-center justify-center p-4 bg-indigo-900/20 border border-indigo-600/30 rounded-2xl">
+                            <span class="text-lg text-indigo-200">צאת השבת</span>
+                            <span id="havdalah-time" class="text-3xl font-black text-white">--:--</span>
+                        </div>
+                    </div>
+                    <p class="text-center text-slate-500 italic text-sm">* זמני ירושלים (50 דק')</p>
+                </section>
+            </div>
+
+            <!-- Col 3: Community Events -->
+            <section class="glass rounded-2xl p-6 flex flex-col h-full shadow-2xl overflow-hidden">
+                <div class="flex items-center gap-3 mb-4 border-b gold-border/30 pb-3">
+                    <span class="gold-accent text-2xl">📢</span>
+                    <h2 class="text-2xl font-bold gold-accent">הודעות הקהילה</h2>
+                </div>
+                <div id="events-list" class="flex-1 overflow-y-auto scroller space-y-4"></div>
+            </section>
+        </main>
+
+        <footer class="mt-6 py-4 px-6 glass rounded-xl flex justify-between items-center text-slate-400 text-sm">
+            <div id="footer-copy"></div>
+            <div class="flex gap-4">
+                <span>נוסח: עדות המזרח</span>
+                <span class="text-slate-600">|</span>
+                <span id="last-update">עודכן כעת</span>
+            </div>
+        </footer>
+    </div>
+
+    <script>
+        /**
+         * CONFIGURATION - הגדרות לוח בית הכנסת
+         * כאן ניתן לשנות את השמות, הזמנים והאירועים בקלות
+         */
+        const CONFIG = {
+            SYNAGOGUE_NAME: 'קהילת "אור התורה" והחסד',
+            CITY_ID: '281184', // 281184 = ירושלים, 293397 = תל אביב
+            PRAYER_TIMES: [
+                { name: 'שחרית מניין א\'', time: '06:30' },
+                { name: 'שחרית מניין ב\'', time: '08:00' },
+                { name: 'מנחה גדולה', time: '13:30' },
+                { name: 'מנחה וערבית', time: '15 דק\' לפני שקיעה' },
+                { name: 'ערבית ב\'', time: '20:30' }
+            ],
+            COMMUNITY_EVENTS: [
+                { type: 'מזל טוב', title: 'למשפחת לוי', description: 'לרגל הולדת הבן! שלום זכר יתקיים בבית המשפחה בליל שבת.' },
+                { type: 'מזל טוב', title: 'לחתן בר המצווה', description: 'יוסי כהן היקר לרגל עלייתו לתורה בשבת הקרובה!' },
+                { type: 'שיעור', title: 'דף היומי', description: 'בכל בוקר מיד לאחר מניין א\' בחדר השיעורים.' },
+                { type: 'אזכרה', title: 'לעילוי נשמת', description: 'אברהם בן שרה ז"ל. סעודת המצווה תתקיים ביום שני.' }
+            ]
+        };
+
+        // UI Update Functions
+        function updateClock() {
+            const now = new Date();
+            document.getElementById('live-clock').textContent = now.toLocaleTimeString('he-IL', { hour12: false });
+            document.getElementById('gregorian-date').textContent = now.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
+        }
+
+        async function fetchHebcalData() {
+            try {
+                // Shabbat & Parasha
+                const shabbatRes = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=${CONFIG.CITY_ID}&m=50`);
+                const shabbat = await shabbatRes.json();
+                
+                // Zmanim (Netz/Shkia)
+                const todayIso = new Date().toISOString().split('T')[0];
+                const zmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=${CONFIG.CITY_ID}&date=${todayIso}`);
+                const zmanim = await zmanimRes.json();
+
+                // Hebrew Date
+                const hDateRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${new Date().getFullYear()}&gm=${new Date().getMonth()+1}&gd=${new Date().getDate()}&g2h=1`);
+                const hDateData = await hDateRes.json();
+
+                // Update UI
+                const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--';
+                
+                const candles = shabbat.items.find(i => i.category === 'candles');
+                const havdalah = shabbat.items.find(i => i.category === 'havdalah');
+                const parasha = shabbat.items.find(i => i.category === 'parashat');
+
+                document.getElementById('candles-time').textContent = formatTime(candles?.date);
+                document.getElementById('havdalah-time').textContent = formatTime(havdalah?.date);
+                document.getElementById('parasha-display').textContent = `פרשת ${parasha?.hebrew || '...'}`;
+                document.getElementById('netz-time').textContent = formatTime(zmanim.times.sunrise);
+                document.getElementById('shkia-time').textContent = formatTime(zmanim.times.sunset);
+                document.getElementById('hebrew-date-display').textContent = `${hDateData.hd} ב${hDateData.hm} ${hDateData.hy}`;
+                document.getElementById('last-update').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})}`;
+                
+            } catch (e) {
+                console.error('Error fetching data', e);
+            }
+        }
+
+        function initUI() {
+            document.getElementById('synagogue-name').textContent = CONFIG.SYNAGOGUE_NAME;
+            document.getElementById('footer-copy').textContent = `© כל הזכויות שמורות - ${CONFIG.SYNAGOGUE_NAME}`;
+
+            // Render Prayers
+            const prayerList = document.getElementById('prayer-list');
+            prayerList.innerHTML = CONFIG.PRAYER_TIMES.map(p => `
+                <div class="flex justify-between items-center p-4 rounded-xl bg-slate-800/40 border border-slate-700/30 animate-fade-in">
+                    <span class="text-xl font-semibold text-white">${p.name}</span>
+                    <span class="text-2xl font-bold gold-accent tabular-nums">${p.time}</span>
+                </div>
+            `).join('');
+
+            // Render Events
+            const eventsList = document.getElementById('events-list');
+            eventsList.innerHTML = CONFIG.COMMUNITY_EVENTS.map(e => `
+                <div class="p-5 rounded-xl bg-slate-800/60 border-r-4 gold-border relative animate-fade-in">
+                    <div class="absolute top-0 right-0 p-1 px-3 gold-bg text-slate-900 text-xs font-bold uppercase">${e.type}</div>
+                    <h3 class="text-xl font-bold text-white mb-1 mt-2">${e.title}</h3>
+                    <p class="text-slate-300 text-lg leading-snug">${e.description}</p>
+                </div>
+            `).join('');
+
+            document.getElementById('app').style.opacity = '1';
+        }
+
+        // Start App
+        setInterval(updateClock, 1000);
+        setInterval(fetchHebcalData, 1000 * 60 * 30); // 30 min refresh
+        
+        updateClock();
+        initUI();
+        fetchHebcalData();
+    </script>
+<script type="module" src="/index.tsx"></script>
+</body>
+</html>

@@ -1,0 +1,1 @@
+// This file is intentionally empty. The app is now a single-file index.html.
