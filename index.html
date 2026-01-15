@@ -9,7 +9,7 @@
     <style>
         body {
             font-family: 'Heebo', 'Rubik', sans-serif;
-            background-color: #0f172a; /* Slate 900 */
+            background-color: #0f172a;
             color: #f8fafc;
             overflow: hidden;
             height: 100vh;
@@ -33,14 +33,28 @@
         }
         .scroller::-webkit-scrollbar { width: 6px; }
         .scroller::-webkit-scrollbar-thumb { background: #d4af37; border-radius: 10px; }
+        
+        /* Login Modal Style */
+        #login-modal, #editor-modal {
+            display: none;
+            position: fixed;
+            inset: 0;
+            background: rgba(0,0,0,0.85);
+            z-index: 100;
+            align-items: center;
+            justify-content: center;
+        }
     </style>
 <link rel="stylesheet" href="/index.css">
 </head>
 <body class="p-4 md:p-6">
 
+    <!-- Admin Trigger (Invisible button top left for safety) -->
+    <button onclick="showLogin()" class="fixed top-2 left-2 w-10 h-10 opacity-0 hover:opacity-20 transition-opacity gold-accent">⚙️</button>
+
     <div id="app" class="h-full flex flex-col max-w-[1920px] mx-auto opacity-0 transition-opacity duration-1000">
         <!-- Header -->
-        <header class="flex flex-col md:flex-row justify-between items-center mb-8 border-b-2 gold-border pb-6">
+        <header class="flex flex-col md:flex-row justify-between items-center mb-6 border-b-2 gold-border pb-6">
             <div class="text-right flex-1">
                 <h1 id="synagogue-name" class="text-3xl md:text-5xl font-extrabold gold-accent tracking-tight mb-1"></h1>
                 <div class="flex gap-4 text-slate-300 text-lg md:text-xl font-medium">
@@ -58,49 +72,59 @@
 
         <main class="grid grid-cols-1 md:grid-cols-3 gap-6 flex-1 overflow-hidden">
             <!-- Col 1: Prayer Times -->
-            <section class="glass rounded-2xl p-6 flex flex-col h-full shadow-2xl">
+            <section class="glass rounded-2xl p-6 flex flex-col h-full shadow-2xl overflow-hidden">
                 <div class="flex items-center gap-3 mb-4 border-b gold-border/30 pb-3">
                     <span class="gold-accent text-2xl">🕒</span>
                     <h2 class="text-2xl font-bold gold-accent">זמני תפילות</h2>
                 </div>
-                <div id="prayer-list" class="space-y-3"></div>
+                <div id="prayer-list" class="space-y-3 overflow-y-auto scroller"></div>
             </section>
 
-            <!-- Col 2: Zmanim -->
-            <div class="flex flex-col gap-6 h-full">
-                <section class="glass rounded-2xl p-6 shadow-2xl">
-                    <div class="flex items-center gap-3 mb-4 border-b gold-border/30 pb-3">
-                        <span class="gold-accent text-2xl">☀️</span>
-                        <h2 class="text-2xl font-bold gold-accent">זמני היום</h2>
+            <!-- Col 2: Zmanim & Weather -->
+            <div class="flex flex-col gap-6 h-full overflow-y-auto scroller">
+                <section class="glass rounded-2xl p-5 shadow-2xl">
+                    <div class="flex items-center gap-3 mb-3 border-b gold-border/30 pb-2">
+                        <span class="gold-accent text-2xl">🕯️</span>
+                        <h2 class="text-xl font-bold gold-accent">זמני היום ושבת</h2>
                     </div>
-                    <div class="bg-slate-800/30 rounded-xl p-4 space-y-2">
-                        <div class="flex justify-between items-center py-2 border-b border-slate-700/50">
-                            <span class="text-xl text-slate-300">נץ החמה</span>
-                            <span id="netz-time" class="text-2xl font-bold text-white">--:--</span>
+                    <div class="grid grid-cols-2 gap-3">
+                        <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 flex flex-col items-center">
+                            <span class="text-sm text-slate-400">נץ החמה</span>
+                            <span id="netz-time" class="text-xl font-bold">--:--</span>
                         </div>
-                        <div class="flex justify-between items-center py-2">
-                            <span class="text-xl text-slate-300">שקיעה</span>
-                            <span id="shkia-time" class="text-2xl font-bold text-white">--:--</span>
+                        <div class="bg-slate-800/40 p-3 rounded-xl border border-slate-700/50 flex flex-col items-center">
+                            <span class="text-sm text-slate-400">שקיעה</span>
+                            <span id="shkia-time" class="text-xl font-bold">--:--</span>
+                        </div>
+                        <div class="bg-amber-900/20 p-3 rounded-xl border border-amber-600/30 flex flex-col items-center">
+                            <span class="text-sm text-amber-200">הדלקת נרות</span>
+                            <span id="candles-time" class="text-xl font-bold">--:--</span>
+                        </div>
+                        <div class="bg-indigo-900/20 p-3 rounded-xl border border-indigo-600/30 flex flex-col items-center">
+                            <span class="text-sm text-indigo-200">צאת השבת</span>
+                            <span id="havdalah-time" class="text-xl font-bold">--:--</span>
                         </div>
                     </div>
                 </section>
 
-                <section class="glass rounded-2xl p-6 shadow-2xl flex-1">
-                    <div class="flex items-center gap-3 mb-4 border-b gold-border/30 pb-3">
-                        <span class="gold-accent text-2xl">🕯️</span>
-                        <h2 class="text-2xl font-bold gold-accent">זמני שבת קודש</h2>
+                <section class="glass rounded-2xl p-5 shadow-2xl">
+                    <div class="flex items-center gap-3 mb-3 border-b gold-border/30 pb-2">
+                        <span class="gold-accent text-2xl">🌍</span>
+                        <h2 class="text-xl font-bold gold-accent">מזג אוויר ולבנה</h2>
                     </div>
-                    <div class="grid grid-cols-2 gap-4 mb-4">
-                        <div class="flex flex-col items-center justify-center p-4 bg-amber-900/20 border border-amber-600/30 rounded-2xl">
-                            <span class="text-lg text-amber-200">הדלקת נרות</span>
-                            <span id="candles-time" class="text-3xl font-black text-white">--:--</span>
+                    <div class="flex justify-around items-center">
+                        <div class="text-center">
+                            <div id="weather-icon" class="text-4xl mb-1">☁️</div>
+                            <div id="weather-temp" class="text-2xl font-bold">--°C</div>
+                            <div id="weather-desc" class="text-xs text-slate-400">טוען...</div>
                         </div>
-                        <div class="flex flex-col items-center justify-center p-4 bg-indigo-900/20 border border-indigo-600/30 rounded-2xl">
-                            <span class="text-lg text-indigo-200">צאת השבת</span>
-                            <span id="havdalah-time" class="text-3xl font-black text-white">--:--</span>
+                        <div class="w-px h-12 bg-slate-700"></div>
+                        <div class="text-center">
+                            <div id="moon-icon" class="text-4xl mb-1">🌑</div>
+                            <div id="moon-phase-name" class="text-lg font-bold">--</div>
+                            <div id="moon-percent" class="text-xs text-slate-400">מצב הלבנה</div>
                         </div>
                     </div>
-                    <p class="text-center text-slate-500 italic text-sm">* זמני ירושלים (50 דק')</p>
                 </section>
             </div>
 
@@ -114,7 +138,7 @@
             </section>
         </main>
 
-        <footer class="mt-6 py-4 px-6 glass rounded-xl flex justify-between items-center text-slate-400 text-sm">
+        <footer class="mt-4 py-3 px-6 glass rounded-xl flex justify-between items-center text-slate-400 text-xs">
             <div id="footer-copy"></div>
             <div class="flex gap-4">
                 <span>נוסח: עדות המזרח</span>
@@ -124,104 +148,208 @@
         </footer>
     </div>
 
+    <!-- Login Modal -->
+    <div id="login-modal">
+        <div class="bg-slate-800 p-8 rounded-2xl border gold-border w-80 shadow-2xl">
+            <h2 class="text-2xl font-bold gold-accent mb-4 text-center">כניסת מנהל</h2>
+            <input type="text" id="admin-user" placeholder="שם משתמש" class="w-full bg-slate-900 border border-slate-700 p-2 rounded mb-3 outline-none focus:border-yellow-600">
+            <input type="password" id="admin-pass" placeholder="סיסמה" class="w-full bg-slate-900 border border-slate-700 p-2 rounded mb-4 outline-none focus:border-yellow-600">
+            <button onclick="attemptLogin()" class="w-full gold-bg text-slate-900 font-bold p-2 rounded hover:brightness-110">התחבר</button>
+            <button onclick="closeModal('login-modal')" class="w-full text-slate-400 mt-2 text-sm">ביטול</button>
+        </div>
+    </div>
+
+    <!-- Editor Modal -->
+    <div id="editor-modal">
+        <div class="bg-slate-800 p-6 rounded-2xl border gold-border w-full max-w-2xl max-h-[90vh] overflow-y-auto scroller shadow-2xl">
+            <div class="flex justify-between items-center mb-4">
+                <h2 class="text-2xl font-bold gold-accent">ניהול אירועים</h2>
+                <button onclick="addEventUI()" class="bg-green-600 text-white px-3 py-1 rounded text-sm">+ הוסף אירוע</button>
+            </div>
+            <div id="editor-list" class="space-y-4 mb-6"></div>
+            <div class="flex gap-3">
+                <button onclick="saveAllEvents()" class="flex-1 gold-bg text-slate-900 font-bold p-3 rounded">שמור שינויים</button>
+                <button onclick="closeModal('editor-modal')" class="flex-1 bg-slate-700 p-3 rounded">סגור</button>
+            </div>
+        </div>
+    </div>
+
     <script>
         /**
-         * CONFIGURATION - הגדרות לוח בית הכנסת
-         * כאן ניתן לשנות את השמות, הזמנים והאירועים בקלות
+         * CONFIGURATION
          */
         const CONFIG = {
             SYNAGOGUE_NAME: 'קהילת "אור התורה" והחסד',
-            CITY_ID: '281184', // 281184 = ירושלים, 293397 = תל אביב
+            CITY_ID: '281184', // ירושלים
+            LAT: 31.7683,
+            LON: 35.2137,
+            ADMIN_USER: 'admin',
+            ADMIN_PASS: '1234', // מומלץ לשנות לפני העלאה
             PRAYER_TIMES: [
-                { name: 'שחרית מניין א\'', time: '06:30' },
-                { name: 'שחרית מניין ב\'', time: '08:00' },
+                { name: 'שחרית א\'', time: '06:30' },
+                { name: 'שחרית ב\'', time: '08:00' },
                 { name: 'מנחה גדולה', time: '13:30' },
                 { name: 'מנחה וערבית', time: '15 דק\' לפני שקיעה' },
                 { name: 'ערבית ב\'', time: '20:30' }
             ],
-            COMMUNITY_EVENTS: [
-                { type: 'מזל טוב', title: 'למשפחת לוי', description: 'לרגל הולדת הבן! שלום זכר יתקיים בבית המשפחה בליל שבת.' },
-                { type: 'מזל טוב', title: 'לחתן בר המצווה', description: 'יוסי כהן היקר לרגל עלייתו לתורה בשבת הקרובה!' },
-                { type: 'שיעור', title: 'דף היומי', description: 'בכל בוקר מיד לאחר מניין א\' בחדר השיעורים.' },
-                { type: 'אזכרה', title: 'לעילוי נשמת', description: 'אברהם בן שרה ז"ל. סעודת המצווה תתקיים ביום שני.' }
+            DEFAULT_EVENTS: [
+                { type: 'מזל טוב', title: 'למשפחת לוי', description: 'לרגל הולדת הבן! שלום זכר בבית המשפחה.' },
+                { type: 'שיעור', title: 'דף היומי', description: 'בכל בוקר לאחר התפילה.' }
             ]
         };
 
-        // UI Update Functions
+        let currentEvents = JSON.parse(localStorage.getItem('synagogue_events')) || CONFIG.DEFAULT_EVENTS;
+
+        // UI Core
         function updateClock() {
             const now = new Date();
             document.getElementById('live-clock').textContent = now.toLocaleTimeString('he-IL', { hour12: false });
             document.getElementById('gregorian-date').textContent = now.toLocaleDateString('he-IL', { weekday: 'long', day: 'numeric', month: 'long', year: 'numeric' });
         }
 
-        async function fetchHebcalData() {
+        async function fetchData() {
             try {
-                // Shabbat & Parasha
-                const shabbatRes = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=${CONFIG.CITY_ID}&m=50`);
-                const shabbat = await shabbatRes.json();
-                
-                // Zmanim (Netz/Shkia)
-                const todayIso = new Date().toISOString().split('T')[0];
-                const zmanimRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=${CONFIG.CITY_ID}&date=${todayIso}`);
-                const zmanim = await zmanimRes.json();
+                // Hebcal (Zmanim & Date)
+                const hRes = await fetch(`https://www.hebcal.com/shabbat?cfg=json&geonameid=${CONFIG.CITY_ID}&m=50`);
+                const hData = await hRes.json();
+                const zRes = await fetch(`https://www.hebcal.com/zmanim?cfg=json&geonameid=${CONFIG.CITY_ID}`);
+                const zData = await zRes.json();
+                const convRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${new Date().getFullYear()}&gm=${new Date().getMonth()+1}&gd=${new Date().getDate()}&g2h=1`);
+                const conv = await convRes.json();
 
-                // Hebrew Date
-                const hDateRes = await fetch(`https://www.hebcal.com/converter?cfg=json&gy=${new Date().getFullYear()}&gm=${new Date().getMonth()+1}&gd=${new Date().getDate()}&g2h=1`);
-                const hDateData = await hDateRes.json();
+                // Weather (Open-Meteo)
+                const wRes = await fetch(`https://api.open-meteo.com/v1/forecast?latitude=${CONFIG.LAT}&longitude=${CONFIG.LON}&current_weather=true`);
+                const wData = await wRes.json();
 
-                // Update UI
-                const formatTime = (iso) => iso ? new Date(iso).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--';
-                
-                const candles = shabbat.items.find(i => i.category === 'candles');
-                const havdalah = shabbat.items.find(i => i.category === 'havdalah');
-                const parasha = shabbat.items.find(i => i.category === 'parashat');
-
-                document.getElementById('candles-time').textContent = formatTime(candles?.date);
-                document.getElementById('havdalah-time').textContent = formatTime(havdalah?.date);
-                document.getElementById('parasha-display').textContent = `פרשת ${parasha?.hebrew || '...'}`;
-                document.getElementById('netz-time').textContent = formatTime(zmanim.times.sunrise);
-                document.getElementById('shkia-time').textContent = formatTime(zmanim.times.sunset);
-                document.getElementById('hebrew-date-display').textContent = `${hDateData.hd} ב${hDateData.hm} ${hDateData.hy}`;
-                document.getElementById('last-update').textContent = `עודכן: ${new Date().toLocaleTimeString('he-IL', {hour: '2-digit', minute:'2-digit'})}`;
-                
-            } catch (e) {
-                console.error('Error fetching data', e);
-            }
+                updateUI(hData, zData, conv, wData.current_weather);
+            } catch (e) { console.error(e); }
         }
 
-        function initUI() {
-            document.getElementById('synagogue-name').textContent = CONFIG.SYNAGOGUE_NAME;
-            document.getElementById('footer-copy').textContent = `© כל הזכויות שמורות - ${CONFIG.SYNAGOGUE_NAME}`;
+        function updateUI(shabbat, zmanim, hdate, weather) {
+            const formatT = (iso) => iso ? new Date(iso).toLocaleTimeString('he-IL', { hour: '2-digit', minute: '2-digit', hour12: false }) : '--:--';
+            
+            document.getElementById('candles-time').textContent = formatT(shabbat.items.find(i => i.category === 'candles')?.date);
+            document.getElementById('havdalah-time').textContent = formatT(shabbat.items.find(i => i.category === 'havdalah')?.date);
+            document.getElementById('parasha-display').textContent = `פרשת ${shabbat.items.find(i => i.category === 'parashat')?.hebrew || '...'}`;
+            document.getElementById('netz-time').textContent = formatT(zmanim.times.sunrise);
+            document.getElementById('shkia-time').textContent = formatT(zmanim.times.sunset);
+            document.getElementById('hebrew-date-display').textContent = `${hdate.hd} ב${hdate.hm} ${hdate.hy}`;
+            
+            // Weather UI
+            document.getElementById('weather-temp').textContent = `${Math.round(weather.temperature)}°C`;
+            const wCodes = { 0: "בהיר", 1: "בהיר לרוב", 2: "מעונן חלקית", 3: "מעונן", 45: "ערפילי", 61: "גשם קל", 95: "סופות רעמים" };
+            document.getElementById('weather-desc').textContent = wCodes[weather.weathercode] || "נאה";
+            document.getElementById('weather-icon').textContent = weather.weathercode < 3 ? "☀️" : weather.weathercode < 60 ? "☁️" : "🌧️";
 
-            // Render Prayers
+            // Moon Phase Calculation
+            const moon = calculateMoonPhase(new Date());
+            document.getElementById('moon-icon').textContent = moon.icon;
+            document.getElementById('moon-phase-name').textContent = moon.name;
+            document.getElementById('moon-percent').textContent = `נראות: ${Math.round(moon.phase * 100)}%`;
+
+            renderEvents();
+        }
+
+        function calculateMoonPhase(date) {
+            const cycle = 29.530588853;
+            const knownNewMoon = new Date("2000-01-06T18:14:00Z");
+            const diff = (date - knownNewMoon) / 1000 / 60 / 60 / 24;
+            const phase = (diff % cycle) / cycle;
+            
+            if (phase < 0.05 || phase > 0.95) return { name: "מולד הלבנה", icon: "🌑", phase };
+            if (phase < 0.25) return { name: "סהר מתמלא", icon: "🌒", phase };
+            if (phase < 0.35) return { name: "חצי לבנה", icon: "🌓", phase };
+            if (phase < 0.50) return { name: "לקראת מילוי", icon: "🌔", phase };
+            if (phase < 0.60) return { name: "לבנה במילואה", icon: "🌕", phase };
+            if (phase < 0.75) return { name: "דעיכה", icon: "🌖", phase };
+            if (phase < 0.85) return { name: "חצי דועך", icon: "🌗", phase };
+            return { name: "סהר דועך", icon: "🌘", phase };
+        }
+
+        function renderEvents() {
+            const list = document.getElementById('events-list');
+            list.innerHTML = currentEvents.map(e => `
+                <div class="p-5 rounded-xl bg-slate-800/60 border-r-4 gold-border relative animate-fade-in shadow-lg">
+                    <div class="absolute top-0 left-0 p-1 px-3 gold-bg text-slate-900 text-xs font-bold uppercase">${e.type}</div>
+                    <h3 class="text-xl font-bold text-white mb-1 mt-2">${e.title}</h3>
+                    <p class="text-slate-300 text-lg leading-snug">${e.description}</p>
+                </div>
+            `).join('');
+        }
+
+        // Admin Logic
+        function showLogin() { document.getElementById('login-modal').style.display = 'flex'; }
+        function closeModal(id) { document.getElementById(id).style.display = 'none'; }
+
+        function attemptLogin() {
+            const u = document.getElementById('admin-user').value;
+            const p = document.getElementById('admin-pass').value;
+            if (u === CONFIG.ADMIN_USER && p === CONFIG.ADMIN_PASS) {
+                closeModal('login-modal');
+                showEditor();
+            } else { alert('פרטים שגויים'); }
+        }
+
+        function showEditor() {
+            document.getElementById('editor-modal').style.display = 'flex';
+            const editorList = document.getElementById('editor-list');
+            editorList.innerHTML = currentEvents.map((e, i) => `
+                <div class="bg-slate-900 p-4 rounded-xl border border-slate-700 relative">
+                    <button onclick="removeEvent(${i})" class="absolute top-2 left-2 text-red-500 font-bold">🗑️</button>
+                    <div class="grid grid-cols-2 gap-2 mb-2">
+                        <input type="text" value="${e.type}" placeholder="סוג (מזל טוב/שיעור)" class="bg-slate-800 p-1 rounded border border-slate-700 event-type-${i}">
+                        <input type="text" value="${e.title}" placeholder="כותרת" class="bg-slate-800 p-1 rounded border border-slate-700 event-title-${i}">
+                    </div>
+                    <textarea placeholder="תיאור" class="w-full bg-slate-800 p-1 rounded border border-slate-700 event-desc-${i}">${e.description}</textarea>
+                </div>
+            `).join('');
+        }
+
+        function addEventUI() {
+            currentEvents.push({ type: 'הודעה', title: 'כותרת חדשה', description: 'תוכן ההודעה...' });
+            showEditor();
+        }
+
+        function removeEvent(i) {
+            currentEvents.splice(i, 1);
+            showEditor();
+        }
+
+        function saveAllEvents() {
+            const newEvents = [];
+            currentEvents.forEach((_, i) => {
+                newEvents.push({
+                    type: document.querySelector(`.event-type-${i}`).value,
+                    title: document.querySelector(`.event-title-${i}`).value,
+                    description: document.querySelector(`.event-desc-${i}`).value
+                });
+            });
+            currentEvents = newEvents;
+            localStorage.setItem('synagogue_events', JSON.stringify(currentEvents));
+            renderEvents();
+            closeModal('editor-modal');
+        }
+
+        function init() {
+            document.getElementById('synagogue-name').textContent = CONFIG.SYNAGOGUE_NAME;
+            document.getElementById('footer-copy').textContent = `© ${CONFIG.SYNAGOGUE_NAME} | הלוח הדיגיטלי הקהילתי`;
+            
             const prayerList = document.getElementById('prayer-list');
             prayerList.innerHTML = CONFIG.PRAYER_TIMES.map(p => `
-                <div class="flex justify-between items-center p-4 rounded-xl bg-slate-800/40 border border-slate-700/30 animate-fade-in">
+                <div class="flex justify-between items-center p-4 rounded-xl bg-slate-800/40 border border-slate-700/30 transition-all">
                     <span class="text-xl font-semibold text-white">${p.name}</span>
                     <span class="text-2xl font-bold gold-accent tabular-nums">${p.time}</span>
                 </div>
             `).join('');
 
-            // Render Events
-            const eventsList = document.getElementById('events-list');
-            eventsList.innerHTML = CONFIG.COMMUNITY_EVENTS.map(e => `
-                <div class="p-5 rounded-xl bg-slate-800/60 border-r-4 gold-border relative animate-fade-in">
-                    <div class="absolute top-0 right-0 p-1 px-3 gold-bg text-slate-900 text-xs font-bold uppercase">${e.type}</div>
-                    <h3 class="text-xl font-bold text-white mb-1 mt-2">${e.title}</h3>
-                    <p class="text-slate-300 text-lg leading-snug">${e.description}</p>
-                </div>
-            `).join('');
-
+            setInterval(updateClock, 1000);
+            updateClock();
+            fetchData();
+            setInterval(fetchData, 1000 * 60 * 30);
             document.getElementById('app').style.opacity = '1';
         }
 
-        // Start App
-        setInterval(updateClock, 1000);
-        setInterval(fetchHebcalData, 1000 * 60 * 30); // 30 min refresh
-        
-        updateClock();
-        initUI();
-        fetchHebcalData();
+        init();
     </script>
 <script type="module" src="/index.tsx"></script>
 </body>
